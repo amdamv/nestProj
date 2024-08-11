@@ -16,29 +16,11 @@ export class UsersService {
   constructor(
     @InjectRepository(UserEntity)
     private userRepository: Repository<UserEntity>,
-    private readonly jwtService: JwtService
+    private readonly jwtService: JwtService,
   ) {}
   async findOneByEmail(email: string): Promise<UserEntity> {
     return await this.userRepository.findOneBy({ email });
   }
-
-  // async create(createUserDto: CreateUserDto): Promise<UserEntity> {
-  //   const existUser = await this.userRepository.findOne({
-  //     where: { email: createUserDto.email },
-  //   });
-  //   if (existUser) {
-  //     throw new BadRequestException("Email already exists!");
-  //   }
-
-  //   const user = this.userRepository.save({
-  //     email: createUserDto.email,
-  //     password: await bcrypt.hash(createUserDto.password),
-  //   });
-
-  //   const token = this.jwtService.sign({ email: createUserDto.email });
-
-  //   return { token, user };
-  // }
 
   async createUser(createUserDto: CreateUserDto): Promise<UserEntity> {
     try {
@@ -51,8 +33,6 @@ export class UsersService {
 
       console.log("createUserDto.password");
       console.log(createUserDto.password);
-
-      // $2b$10$PVPS2ngnxxcs/hco3X81NuJPqIAnqlGcJP1cKweuc7wZBbRBQHnei
 
       console.log("user.password");
       console.log(user.password);
@@ -91,15 +71,13 @@ export class UsersService {
     const updatedUser = this.userRepository.merge(existingUser, updateUserDto);
     return await this.userRepository.save(updatedUser);
   }
-  
 
   async delete(id: number): Promise<void> {
     const existingUser = await this.findOneById(id);
     if (!existingUser) {
       throw new HttpException("User Not Found", 404);
-
     }
-    
+
     await this.userRepository.remove(existingUser);
   }
 
@@ -118,13 +96,6 @@ export class UsersService {
       });
     }
   }
-
-  // async resequenceIds(): Promise<any> {
-  //   const users = await this.userRepository.find();
-  //   for (let i = 0; i < users.length; i++) {
-  //     await this.userRepository.update(users[i].id, { id: i + 1 });
-  //   }
-  // }
 
   async paginate(options: IPaginationOptions): Promise<Pagination<UserEntity>> {
     const queryBuilder = this.userRepository.createQueryBuilder("users");

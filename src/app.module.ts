@@ -1,14 +1,14 @@
 import { MyPageService } from "./users/userInfo/mypage.service";
 import { MyPageController } from "./users/userInfo/mypage.controller";
 import { Module } from "@nestjs/common";
-import { AppController } from "./app.controller";
-import { AppService } from "./app.service";
+
 import { UsersModule } from "./users/users.module";
 import { TypeOrmModule } from "@nestjs/typeorm";
-import { UserEntity } from "./users/entity/user.entity";
 import { AuthModule } from "./auth/auth.module";
 import { ConfigModule } from "@nestjs/config";
 import { MypageModule } from "./users/userInfo/mypage.module";
+import { S3Module } from "./providers/files/s3/s3.module";
+import { S3Controller } from "./providers/files/s3/s3.controller";
 
 @Module({
   imports: [
@@ -29,8 +29,9 @@ import { MypageModule } from "./users/userInfo/mypage.module";
     AuthModule,
     UsersModule,
     MypageModule,
+    S3Module,
   ],
-  controllers: [MyPageController, AppController],
-  providers: [MyPageService, AppService],
+  controllers: [MyPageController, S3Controller],
+  providers: [MyPageService],
 })
 export class AppModule {}
