@@ -18,6 +18,8 @@ import { S3Controller } from "./providers/files/s3/s3.controller";
     }),
     CacheModule.register({
       isGlobal: true,
+      ttl: 3600, // 1 hour
+      max: 100, // maximum number of items in the cache
     }),
     TypeOrmModule.forRoot({
       type: "postgres",
