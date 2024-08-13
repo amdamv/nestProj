@@ -11,6 +11,7 @@ import {
   Pagination,
 } from "nestjs-typeorm-paginate";
 import { AxiosInstance } from "axios";
+import { Transactional } from "typeorm-transactional";
 
 @Injectable()
 export class UsersService {
@@ -24,6 +25,7 @@ export class UsersService {
     return await this.userRepository.findOneBy({ email });
   }
 
+  @Transactional()
   async createUser(createUserDto: CreateUserDto): Promise<UserEntity> {
     try {
       const user: UserEntity = this.userRepository.create({

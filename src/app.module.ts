@@ -10,6 +10,8 @@ import { ConfigModule } from "@nestjs/config";
 import { MypageModule } from "./users/userInfo/mypage.module";
 import { S3Module } from "./providers/files/s3/s3.module";
 import { S3Controller } from "./providers/files/s3/s3.controller";
+import { addTransactionalDataSource } from "typeorm-transactional";
+import { DataSource } from "typeorm";
 
 @Module({
   imports: [
@@ -21,16 +23,27 @@ import { S3Controller } from "./providers/files/s3/s3.controller";
       ttl: 3600, // 1 hour
       max: 100, // maximum number of items in the cache
     }),
-    TypeOrmModule.forRoot({
-      type: "postgres",
-      host: "localhost",
-      port: 5430,
-      password: "123123123",
-      username: "nestjs_user",
-      entities: [__dirname + "/**/*.entity{.js, .ts}"],
-      database: "nestjs_main",
-      synchronize: true,
-      logging: true,
+    TypeOrmModule.forRootAsync({
+      imports: undefined,
+      useFactory() {
+        return {
+          type: "postgres",
+          host: "localhost",
+          port: 5430,
+          password: "123123123",
+          username: "nestjs_user",
+          entities: [__dirname + "/**/*.entity{.js, .ts}"],
+          database: "nestjs_main",
+          synchronize: true,
+          logging: true,
+        };
+      },
+      async dataSourceFactory(options) {
+        if (!options) {
+          throw new Error("Invalid options passed");
+        }
+        return addTransactionalDataSource(new DataSource(options));
+      },
     }),
     AuthModule,
     UsersModule,

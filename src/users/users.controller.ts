@@ -20,6 +20,7 @@ import { JwtAuthGuard } from "src/auth/guards/jwt-auth.guard";
 import { PaginationQueryDto } from "src/users/dto/paginationQuery.dto";
 import { CacheTTL } from "@nestjs/common/cache";
 import { CacheInterceptor, CacheKey } from "@nestjs/cache-manager";
+import { Transactional } from "typeorm-transactional";
 
 @UseGuards(JwtAuthGuard)
 @Controller("users")
@@ -34,7 +35,7 @@ export class UsersController {
       message: "User IDs resequenced successfully",
     };
   }
-
+  @Transactional()
   @Post()
   async createUser(@Body() createUserDto: CreateUserDto) {
     try {
