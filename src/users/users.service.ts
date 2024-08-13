@@ -10,9 +10,11 @@ import {
   paginate,
   Pagination,
 } from "nestjs-typeorm-paginate";
+import { AxiosInstance } from "axios";
 
 @Injectable()
 export class UsersService {
+  public readonly axiosRef: AxiosInstance;
   constructor(
     @InjectRepository(UserEntity)
     private userRepository: Repository<UserEntity>,

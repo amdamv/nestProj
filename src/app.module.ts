@@ -1,6 +1,7 @@
 import { MyPageService } from "./users/userInfo/mypage.service";
 import { MyPageController } from "./users/userInfo/mypage.controller";
 import { Module } from "@nestjs/common";
+import { CacheModule } from "@nestjs/cache-manager";
 
 import { UsersModule } from "./users/users.module";
 import { TypeOrmModule } from "@nestjs/typeorm";
@@ -15,6 +16,7 @@ import { S3Controller } from "./providers/files/s3/s3.controller";
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+    CacheModule.register({ isGlobal: true }),
     TypeOrmModule.forRoot({
       type: "postgres",
       host: "localhost",

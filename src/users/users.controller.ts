@@ -10,6 +10,7 @@ import {
   UseGuards,
   ParseIntPipe,
   Query,
+  UseInterceptors,
 } from "@nestjs/common";
 import { UsersService } from "./users.service";
 import { CreateUserDto } from "./dto/create-user.dto";
@@ -17,6 +18,8 @@ import { UpdateUserDto } from "./dto/update-user.dto";
 import { User } from "./userInfo/user.decorator";
 import { JwtAuthGuard } from "src/auth/guards/jwt-auth.guard";
 import { PaginationQueryDto } from "src/users/dto/paginationQuery.dto";
+import { CacheTTL } from "@nestjs/common/cache";
+import { CacheInterceptor, CacheKey } from "@nestjs/cache-manager";
 
 @UseGuards(JwtAuthGuard)
 @Controller("users")
@@ -74,6 +77,9 @@ export class UsersController {
     }
   }
 
+  @UseInterceptors(CacheInterceptor)
+  @CacheKey("custom-key")
+  @CacheTTL(30) // override TTL to 30 seconds
   @Get(":id")
   async findOneById(@Param("id", ParseIntPipe) id: number) {
     try {
@@ -100,7 +106,7 @@ export class UsersController {
   @Patch(":id")
   async update(
     @Param("id", ParseIntPipe) id: number,
-    @Body() updateUserDto: UpdateUserDto
+    @Body() updateUserDto: UpdateUserDto,
   ) {
     try {
       await this.usersService.update(Number(id), updateUserDto);
