@@ -77,10 +77,10 @@ export class UsersController {
     }
   }
 
+  @Get(":id")
   @UseInterceptors(CacheInterceptor)
   @CacheKey("custom-key")
   @CacheTTL(30) // override TTL to 30 seconds
-  @Get(":id")
   async findOneById(@Param("id", ParseIntPipe) id: number) {
     try {
       const data = await this.usersService.findOneById(Number(id));
@@ -97,6 +97,10 @@ export class UsersController {
     }
   }
 
+  @Get(":id")
+  @UseInterceptors(CacheInterceptor)
+  @CacheKey("custom-key")
+  @CacheTTL(30) // override TTL to 30 seconds
   @Get()
   async getAllUsers(@Query() query: PaginationQueryDto) {
     const options = { page: query.page, limit: query.limit };
