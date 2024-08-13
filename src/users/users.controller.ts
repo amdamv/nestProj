@@ -104,6 +104,7 @@ export class UsersController {
   ) {
     try {
       await this.usersService.update(Number(id), updateUserDto);
+        console.log('test')
       return {
         success: true,
         message: "User Updated Successfuly",
