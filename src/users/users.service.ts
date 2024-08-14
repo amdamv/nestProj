@@ -1,5 +1,8 @@
-import { JwtService } from "@nestjs/jwt";
-import { HttpException, Injectable } from "@nestjs/common";
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
 import { UserEntity } from "./entity/user.entity";
@@ -10,16 +13,13 @@ import {
   paginate,
   Pagination,
 } from "nestjs-typeorm-paginate";
-import { AxiosInstance } from "axios";
 import { Transactional } from "typeorm-transactional";
 
 @Injectable()
 export class UsersService {
-  public readonly axiosRef: AxiosInstance;
   constructor(
     @InjectRepository(UserEntity)
     private userRepository: Repository<UserEntity>,
-    private readonly jwtService: JwtService,
   ) {}
   async findOneByEmail(email: string): Promise<UserEntity> {
     return await this.userRepository.findOneBy({ email });
@@ -43,7 +43,7 @@ export class UsersService {
 
       return await this.userRepository.save(user);
     } catch (error) {
-      throw new HttpException(error.message, 500);
+      throw new BadRequestException(error.message);
     }
   }
 
@@ -54,15 +54,7 @@ export class UsersService {
   async findOneById(id: number): Promise<UserEntity> {
     const userData = await this.userRepository.findOneBy({ id });
     if (!userData) {
-      throw new HttpException("User Not Found", 404);
-    }
-    return userData;
-  }
-
-  async findOneByName(fullName: string): Promise<UserEntity | undefined> {
-    const userData = await this.userRepository.findOneBy({ fullName });
-    if (!userData) {
-      throw new HttpException("User Not Found", 404);
+      throw new NotFoundException("User Not Found");
     }
     return userData;
   }
@@ -70,7 +62,7 @@ export class UsersService {
   async update(id: number, updateUserDto: UpdateUserDto): Promise<UserEntity> {
     const existingUser = await this.findOneById(id);
     if (!existingUser) {
-      throw new HttpException("User Not Found", 404);
+      throw new NotFoundException("User not found for updationg");
     }
     const updatedUser = this.userRepository.merge(existingUser, updateUserDto);
     return await this.userRepository.save(updatedUser);
@@ -79,7 +71,7 @@ export class UsersService {
   async delete(id: number): Promise<void> {
     const existingUser = await this.findOneById(id);
     if (!existingUser) {
-      throw new HttpException("User Not Found", 404);
+      throw new NotFoundException("User not found for deleting");
     }
 
     await this.userRepository.remove(existingUser);
