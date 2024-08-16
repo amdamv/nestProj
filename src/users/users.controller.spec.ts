@@ -29,7 +29,6 @@ describe("UsersController", () => {
         },
       ],
     }).compile();
-
     controller = module.get<UsersController>(UsersController);
   });
 
