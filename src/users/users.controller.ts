@@ -81,9 +81,9 @@ export class UsersController {
   @UseInterceptors(CacheInterceptor)
   @CacheKey("UserCache")
   @CacheTTL(30) // override TTL to 30 seconds
-  async findOneById(@Param("id", ParseIntPipe) id: number) {
+  await(@Param("id", ParseIntPipe) id: number) {
     try {
-      const data = await this.usersService.findOneById(Number(id));
+      const data = this.usersService.findOneById(Number(id));
       return {
         success: true,
         data,

@@ -20,17 +20,20 @@ import { RedisClientOptions } from "redis";
       inject: [ConfigService],
     }),
     CacheModule.registerAsync<RedisClientOptions>({
-      useFactory: async (): Promise<CacheModule> => {
+      useFactory: async (
+        configService: ConfigService,
+      ): Promise<CacheModule> => {
         return {
           store: redisStore,
           name: "redis-wsbe",
           host: "localhost",
-          port: 6379,
-          pass: "123123123",
+          port: configService.get<string>("REDIS_PORT"),
+          password: configService.get<string>("REDIS_PASSWORD"),
           ttl: 60,
           max: 100,
         };
       },
+      inject: [ConfigService],
       isGlobal: true,
     }),
     UsersModule,
