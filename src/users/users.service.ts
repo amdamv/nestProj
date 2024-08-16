@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  Inject,
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
@@ -14,12 +15,14 @@ import {
   Pagination,
 } from "nestjs-typeorm-paginate";
 import { Transactional } from "typeorm-transactional";
+import { CACHE_MANAGER, Cache } from "@nestjs/cache-manager";
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(UserEntity)
     private userRepository: Repository<UserEntity>,
+    @Inject(CACHE_MANAGER) private cacheService: Cache,
   ) {}
   async findOneByEmail(email: string): Promise<UserEntity> {
     return await this.userRepository.findOneBy({ email });
@@ -53,6 +56,11 @@ export class UsersService {
 
   async findOneById(id: number): Promise<UserEntity> {
     const userData = await this.userRepository.findOneBy({ id });
+
+    await this.cacheService.set(id.toString(), userData);
+    const cachedData = await this.cacheService.get(id.toString());
+    console.log("data set to cache", cachedData);
+
     if (!userData) {
       throw new NotFoundException("User Not Found");
     }

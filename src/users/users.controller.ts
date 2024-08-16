@@ -16,8 +16,8 @@ import { UsersService } from "./users.service";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
 import { User } from "./userInfo/user.decorator";
-import { JwtAuthGuard } from "src/auth/guards/jwt-auth.guard";
-import { PaginationQueryDto } from "src/users/dto/paginationQuery.dto";
+import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
+import { PaginationQueryDto } from "../users/dto/paginationQuery.dto";
 import { CacheTTL } from "@nestjs/common/cache";
 import { CacheInterceptor, CacheKey } from "@nestjs/cache-manager";
 
@@ -79,7 +79,7 @@ export class UsersController {
 
   @Get(":id")
   @UseInterceptors(CacheInterceptor)
-  @CacheKey("custom-key")
+  @CacheKey("UserCache")
   @CacheTTL(30) // override TTL to 30 seconds
   async findOneById(@Param("id", ParseIntPipe) id: number) {
     try {
@@ -99,7 +99,7 @@ export class UsersController {
 
   @Get(":id")
   @UseInterceptors(CacheInterceptor)
-  @CacheKey("custom-key")
+  @CacheKey("AllUsersCache")
   @CacheTTL(30) // override TTL to 30 seconds
   @Get()
   async getAllUsers(@Query() query: PaginationQueryDto) {

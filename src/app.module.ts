@@ -1,7 +1,7 @@
 import { MyPageService } from "./users/userInfo/mypage.service";
 import { MyPageController } from "./users/userInfo/mypage.controller";
 import { Module } from "@nestjs/common";
-import { CacheModule } from "@nestjs/cache-manager";
+import { CacheInterceptor } from "@nestjs/cache-manager";
 import { UsersModule } from "./users/users.module";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { AuthModule } from "./auth/auth.module";
@@ -11,17 +11,14 @@ import { S3Module } from "./providers/files/s3/s3.module";
 import { S3Controller } from "./providers/files/s3/s3.controller";
 import { addTransactionalDataSource } from "typeorm-transactional";
 import { DataSource } from "typeorm";
+import { APP_INTERCEPTOR } from "@nestjs/core";
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
     }),
-    CacheModule.register({
-      isGlobal: true,
-      ttl: 3600, // 1 hour
-      max: 100, // maximum number of items in the cache
-    }),
+
     TypeOrmModule.forRootAsync({
       imports: undefined,
       useFactory() {
@@ -50,6 +47,12 @@ import { DataSource } from "typeorm";
     S3Module,
   ],
   controllers: [MyPageController, S3Controller],
-  providers: [MyPageService],
+  providers: [
+    MyPageService,
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: CacheInterceptor,
+    },
+  ],
 })
 export class AppModule {}
