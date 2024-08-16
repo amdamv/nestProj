@@ -7,11 +7,10 @@ describe("UsersController", () => {
 
   const mockUserService = {
     create: jest.fn((dto) => {
-      const { ...examples } = {
+      return {
         id: Date.now(),
         ...dto.data,
       };
-      return examples;
     }),
   };
 
