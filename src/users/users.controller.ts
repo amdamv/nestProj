@@ -11,6 +11,7 @@ import {
   ParseIntPipe,
   Query,
   UseInterceptors,
+  Logger,
 } from "@nestjs/common";
 import { UsersService } from "./users.service";
 import { CreateUserDto } from "./dto/create-user.dto";
@@ -24,6 +25,7 @@ import { CacheInterceptor, CacheKey } from "@nestjs/cache-manager";
 @UseGuards(JwtAuthGuard)
 @Controller("users")
 export class UsersController {
+  private logger = new Logger("UsersController");
   constructor(private readonly usersService: UsersService) {}
 
   @Post("resequence")
@@ -53,10 +55,7 @@ export class UsersController {
 
   @Get("my")
   async findMyInfo(@User() user): Promise<UserEntity> {
-    console.log(user);
-    console.log(user);
-    console.log(user);
-    console.log(user);
+    this.logger.log(user);
     return await this.usersService.findMyInfo(Number(user.id));
   }
 

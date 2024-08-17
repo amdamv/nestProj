@@ -51,13 +51,12 @@ describe("UsersController", () => {
       description: "Test user",
     } as UserEntity;
 
-    jest.spyOn(mockUserService, "create").mockReturnValue(user);
+    mockUserService.create.mockResolvedValue(user);
 
     const result = await controller.createUser(createUserDto);
 
     expect(mockUserService.create).toBeCalled();
     expect(mockUserService.create).toBeCalledWith(createUserDto);
-
     expect(result).toEqual(user);
   });
 });

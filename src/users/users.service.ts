@@ -3,6 +3,7 @@ import {
   Inject,
   Injectable,
   NotFoundException,
+  Logger,
 } from "@nestjs/common";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
@@ -19,6 +20,7 @@ import { CACHE_MANAGER, Cache } from "@nestjs/cache-manager";
 
 @Injectable()
 export class UsersService {
+  private logger = new Logger("UsersService");
   constructor(
     @InjectRepository(UserEntity)
     private userRepository: Repository<UserEntity>,
@@ -38,11 +40,11 @@ export class UsersService {
         description: createUserDto.description,
       });
 
-      console.log("createUserDto.password");
-      console.log(createUserDto.password);
+      this.logger.log("createUserDto.password");
+      this.logger.log(createUserDto.password);
 
-      console.log("user.password");
-      console.log(user.password);
+      this.logger.log("user.password");
+      this.logger.log(user.password);
 
       return await this.userRepository.save(user);
     } catch (error) {
@@ -59,7 +61,7 @@ export class UsersService {
 
     await this.cacheService.set(id.toString(), userData);
     const cachedData = await this.cacheService.get(id.toString());
-    console.log("data set to cache", cachedData);
+    this.logger.log("data set to cache", cachedData);
 
     if (!userData) {
       throw new NotFoundException("User Not Found");
