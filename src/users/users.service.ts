@@ -39,7 +39,6 @@ export class UsersService {
         password: createUserDto.password,
         description: createUserDto.description,
       });
-
       this.logger.log("createUserDto.password");
       this.logger.log(createUserDto.password);
 
