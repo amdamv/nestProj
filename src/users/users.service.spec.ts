@@ -5,61 +5,69 @@ import { UserEntity } from "./entity/user.entity";
 import { Repository } from "typeorm";
 import { CACHE_MANAGER } from "@nestjs/cache-manager";
 
+jest.mock("typeorm-transactional", () => ({
+  Transactional: () => () => ({}),
+}));
+
 describe("UsersService", () => {
   let service: UsersService;
   let repository: Repository<UserEntity>;
 
-  beforeAll(async () => {
-    jest.mock("typeorm-transactional", () => ({
-      Transactional: () => () => ({}),
-    }));
-
-    beforeEach(async () => {
-      const module: TestingModule = await Test.createTestingModule({
-        providers: [
-          UsersService,
-          {
-            provide: getRepositoryToken(UserEntity),
-            useClass: Repository, // Вы можете замокать методы репозитория, если это нужно
+  beforeEach(async () => {
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        UsersService,
+        {
+          provide: getRepositoryToken(UserEntity),
+          useValue: {
+            save: jest.fn(),
+            create: jest.fn(),
+            findOne: jest.fn(),
+            // Другие методы, которые использует ваш сервис
           },
-          {
-            provide: CACHE_MANAGER,
-            useValue: {
-              // Замокированные методы кеша, если это нужно
-              get: jest.fn(),
-              set: jest.fn(),
-              del: jest.fn(),
-            },
+        },
+        {
+          provide: CACHE_MANAGER,
+          useValue: {
+            get: jest.fn(),
+            set: jest.fn(),
+            del: jest.fn(),
           },
-        ],
-      }).compile();
+        },
+      ],
+    }).compile();
 
-      service = module.get<UsersService>(UsersService);
-      repository = module.get<Repository<UserEntity>>(
-        getRepositoryToken(UserEntity),
-      );
-    });
+    service = module.get(UsersService);
+    repository = module.get(getRepositoryToken(UserEntity));
+  });
 
-    it("should create a new user", async () => {
-      const userDto = {
-        fullName: "Example",
-        email: "name@example.com",
-        password: "testtest",
-        description: "test",
-      };
+  it("should create a new user", async () => {
+    const userDto = {
+      fullName: "John",
+      email: "name@example.com",
+      password: "testtest",
+      description: "test",
+    };
 
-      jest.spyOn(repository, "save").mockResolvedValue({
-        id: 1,
-        ...userDto,
-      } as UserEntity);
+    const savedUser = {
+      id: 1,
+      ...userDto,
+      hashPassword: jest.fn(),
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    } as UserEntity;
 
-      const user = await service.createUser(userDto);
+    // Замокировать поведение метода create
+    jest.spyOn(repository, "create").mockReturnValue(savedUser);
 
-      expect(user).toHaveProperty("id");
-      expect(userDto.fullName).toBe("John");
-      expect(userDto.email).toBe("name@example.com");
-      expect(userDto.description).toBe("test");
-      expect(userDto.password).toBe("testtest");
-    });
+    // Замокировать поведение метода save
+    jest.spyOn(repository, "save").mockResolvedValue(savedUser);
+
+    const user = await service.createUser(userDto);
+
+    // Проверяем, что пользователь был создан и сохранен
+    expect(repository.create).toHaveBeenCalledWith(userDto);
+    expect(repository.save).toHaveBeenCalledWith(savedUser);
+    expect(user).toEqual(savedUser);
   });
 });

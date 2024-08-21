@@ -68,6 +68,7 @@ export class UsersService {
     return userData;
   }
 
+  @Transactional()
   async update(id: number, updateUserDto: UpdateUserDto): Promise<UserEntity> {
     const existingUser = await this.findOneById(id);
     if (!existingUser) {

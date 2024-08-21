@@ -8,6 +8,7 @@ import { ConfigService } from "@nestjs/config";
 import { CacheModule } from "@nestjs/cache-manager";
 import { redisStore } from "cache-manager-redis-store";
 import { RedisClientOptions } from "redis";
+import { BullModule } from "@nestjs/bullmq";
 
 @Module({
   imports: [
@@ -35,6 +36,9 @@ import { RedisClientOptions } from "redis";
       },
       inject: [ConfigService],
       isGlobal: true,
+    }),
+    BullModule.registerQueue({
+      name: "Balance",
     }),
     UsersModule,
   ],
