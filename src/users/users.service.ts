@@ -22,9 +22,9 @@ import { CACHE_MANAGER, Cache } from "@nestjs/cache-manager";
 export class UsersService {
   private logger = new Logger("UsersService");
   constructor(
+    @Inject(CACHE_MANAGER) private cacheService: Cache,
     @InjectRepository(UserEntity)
     private userRepository: Repository<UserEntity>,
-    @Inject(CACHE_MANAGER) private cacheService: Cache,
   ) {}
   async findOneByEmail(email: string): Promise<UserEntity> {
     return await this.userRepository.findOneBy({ email });
@@ -38,6 +38,7 @@ export class UsersService {
         email: createUserDto.email,
         password: createUserDto.password,
         description: createUserDto.description,
+        balance: createUserDto.balance,
       });
       this.logger.log("createUserDto.password");
       this.logger.log(createUserDto.password);
@@ -72,10 +73,46 @@ export class UsersService {
   async update(id: number, updateUserDto: UpdateUserDto): Promise<UserEntity> {
     const existingUser = await this.findOneById(id);
     if (!existingUser) {
-      throw new NotFoundException("User not found for updationg");
+      throw new NotFoundException("User not found for updating");
     }
     const updatedUser = this.userRepository.merge(existingUser, updateUserDto);
     return await this.userRepository.save(updatedUser);
+  }
+
+  @Transactional()
+  async transferBalance(
+    fromUserId: number,
+    toUserId: number,
+    amount: number,
+  ): Promise<void> {
+    if (amount <= 0) {
+      throw new BadRequestException("Amount must be greater than zero");
+    }
+
+    // Поиск пользователей по ID
+    const fromUser = await this.userRepository.findOne({
+      where: { id: fromUserId },
+    });
+    const toUser = await this.userRepository.findOne({
+      where: { id: toUserId },
+    });
+
+    if (!fromUser || !toUser) {
+      throw new NotFoundException("One or both users not found");
+    }
+
+    // Проверка достаточного баланса
+    if (fromUser.balance < amount) {
+      throw new BadRequestException("Insufficient balance");
+    }
+
+    // Обновляем балансы
+    fromUser.balance -= amount;
+    toUser.balance += amount;
+
+    // Сохраняем изменения в базе данных
+    await this.userRepository.save(fromUser);
+    await this.userRepository.save(toUser);
   }
 
   async delete(id: number): Promise<void> {

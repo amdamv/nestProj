@@ -33,6 +33,13 @@ export class CreateUserDto {
   password: string;
 
   @ApiProperty({
+    description: "User initial balance",
+    example: 1000,
+  })
+  @IsOptional()
+  balance: number;
+
+  @ApiProperty({
     description: "User description",
     example: "This is a sample user",
   })

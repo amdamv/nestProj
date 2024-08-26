@@ -12,7 +12,6 @@ import { S3Controller } from "./providers/files/s3/s3.controller";
 import { addTransactionalDataSource } from "typeorm-transactional";
 import { DataSource } from "typeorm";
 import { APP_INTERCEPTOR } from "@nestjs/core";
-import { BullModule } from "@nestjs/bullmq";
 
 @Module({
   imports: [
@@ -21,15 +20,6 @@ import { BullModule } from "@nestjs/bullmq";
     }),
 
     TypeOrmModule.forRootAsync({
-      imports: [
-        undefined,
-        BullModule.forRoot({
-          connection: {
-            host: "localhost",
-            port: 6379,
-          },
-        }),
-      ],
       useFactory() {
         return {
           type: "postgres",

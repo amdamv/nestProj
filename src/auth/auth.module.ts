@@ -7,7 +7,6 @@ import { ConfigModule, ConfigService } from "@nestjs/config";
 import { UsersModule } from "src/users/users.module";
 import { AuthController } from "./auth.controller";
 import { LocalStrategy } from "./strategies/local.strategy";
-
 @Module({
   imports: [
     ConfigModule.forRoot(),

@@ -46,6 +46,7 @@ describe("UsersService", () => {
       fullName: "John",
       email: "name@example.com",
       password: "testtest",
+      balance: 0,
       description: "test",
     };
 

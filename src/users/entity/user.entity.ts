@@ -38,6 +38,11 @@ export class UserEntity {
     this.password = await bcrypt.hash(this.password, 10);
   }
 
+  @ApiProperty({ description: "Balance $" })
+  @Column({ default: 0, scale: 2 })
+  @IsNumber()
+  balance: number;
+
   @ApiProperty({ description: "Description" })
   @Column({ nullable: true })
   description: string;

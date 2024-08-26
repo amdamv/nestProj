@@ -5,10 +5,11 @@ import { TypeOrmModule } from "@nestjs/typeorm";
 import { UserEntity } from "./entity/user.entity";
 import { JwtModule } from "@nestjs/jwt";
 import { ConfigService } from "@nestjs/config";
-import { CacheModule } from "@nestjs/cache-manager";
+import { CacheInterceptor, CacheModule } from "@nestjs/cache-manager";
 import { redisStore } from "cache-manager-redis-store";
 import { RedisClientOptions } from "redis";
-import { BullModule } from "@nestjs/bullmq";
+import { MyPageService } from "./userInfo/mypage.service";
+import { APP_INTERCEPTOR } from "@nestjs/core";
 
 @Module({
   imports: [
@@ -37,14 +38,16 @@ import { BullModule } from "@nestjs/bullmq";
       inject: [ConfigService],
       isGlobal: true,
     }),
-    BullModule.registerQueue({
-      name: "Balance",
-    }),
-    UsersModule,
   ],
-
   controllers: [UsersController],
-  providers: [UsersService],
+  providers: [
+    UsersService,
+    MyPageService,
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: CacheInterceptor,
+    },
+  ],
   exports: [UsersService],
 })
 export class UsersModule {}
