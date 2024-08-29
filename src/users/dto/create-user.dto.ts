@@ -4,6 +4,7 @@ import {
   IsEmail,
   MinLength,
   IsOptional,
+  IsNumber,
 } from "class-validator";
 import { ApiProperty } from "@nestjs/swagger";
 
@@ -37,6 +38,8 @@ export class CreateUserDto {
     example: 1000,
   })
   @IsOptional()
+  @IsNotEmpty()
+  @IsNumber()
   balance: number;
 
   @ApiProperty({

@@ -1,7 +1,7 @@
 import { NestFactory } from "@nestjs/core";
 import { AppModule } from "./app.module";
 import { ValidationPipe, Logger } from "@nestjs/common";
-import { HttpExceptionFilter } from "../http-exception.filters";
+import { HttpExceptionFilter } from "../http-exception.filter";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import { initializeTransactionalContext } from "typeorm-transactional";
 

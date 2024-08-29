@@ -83,37 +83,84 @@ export class UsersService {
   async transferBalance(
     fromUserId: number,
     toUserId: number,
-    amount: number,
+    amount: string,
   ): Promise<void> {
-    if (amount <= 0) {
-      throw new BadRequestException("Amount must be greater than zero");
+    const numericAmount = parseFloat(amount);
+    this.logger.log("step 1 transaction");
+    if (numericAmount <= 0 || isNaN(numericAmount)) {
+      throw new BadRequestException(
+        "Amount must be a valid number greater than zero",
+      );
     }
 
-    // Поиск пользователей по ID
+    // Поиск пользователей
     const fromUser = await this.userRepository.findOne({
       where: { id: fromUserId },
     });
     const toUser = await this.userRepository.findOne({
       where: { id: toUserId },
     });
+    this.logger.log("step 2 transaction");
 
     if (!fromUser || !toUser) {
       throw new NotFoundException("One or both users not found");
     }
 
-    // Проверка достаточного баланса
-    if (fromUser.balance < amount) {
+    // Приведение баланса к числовому типу (явное приведение типа, если из базы возвращаются строки)
+    const fromUserBalance = parseFloat(fromUser.balance as unknown as string);
+    const toUserBalance = parseFloat(toUser.balance as unknown as string);
+    this.logger.log("step 3 transaction");
+
+    if (fromUserBalance < numericAmount) {
       throw new BadRequestException("Insufficient balance");
     }
 
-    // Обновляем балансы
-    fromUser.balance -= amount;
-    toUser.balance += amount;
+    this.logger.log("step 4 transaction");
+    // Обновление баланса с точностью до двух знаков после запятой
+    const newFromUserBalance = parseFloat(
+      (fromUserBalance - numericAmount).toFixed(2),
+    );
+    const newToUserBalance = parseFloat(
+      (toUserBalance + numericAmount).toFixed(2),
+    );
+    this.logger.log("step 5 transaction");
 
-    // Сохраняем изменения в базе данных
+    // Присвоение нового значения баланса
+    fromUser.balance = newFromUserBalance;
+    toUser.balance = newToUserBalance;
+    this.logger.log("step 6 transaction");
+
     await this.userRepository.save(fromUser);
     await this.userRepository.save(toUser);
   }
+  // async transferBalance(fromUserId: number, toUserId: number, amount: string): Promise<void> {
+  //   const numericAmount = parseFloat(amount);
+  //   this.logger.log("step 1 transfer")
+  //   if (numericAmount <= 0 || isNaN(numericAmount)) {
+  //     throw new BadRequestException('Amount must be a valid number greater than zero');
+  //   }
+  //
+  //   // Поиск пользователей
+  //   const fromUser = await this.userRepository.findOne({ where: { id: fromUserId } });
+  //   const toUser = await this.userRepository.findOne({ where: { id: toUserId } });
+  //   this.logger.log("step 2 transfer")
+  //
+  //   if (!fromUser || !toUser) {
+  //     throw new NotFoundException('One or both users not found');
+  //   }
+  //
+  //   if (fromUser.balance < numericAmount) {
+  //     throw new BadRequestException('Insufficient balance');
+  //   }
+  //   this.logger.log("step 3 transfer")
+  //   fromUser.balance = parseFloat((fromUser.balance - numericAmount).toFixed(2));
+  //   toUser.balance = parseFloat((toUser.balance + numericAmount).toFixed(2));
+  //
+  //   this.logger.log("step 4 transfer")
+  //
+  //   await this.userRepository.save(fromUser);
+  //   await this.userRepository.save(toUser);
+  // }
 
   async delete(id: number): Promise<void> {
     const existingUser = await this.findOneById(id);

@@ -39,8 +39,7 @@ export class UserEntity {
   }
 
   @ApiProperty({ description: "Balance $" })
-  @Column({ default: 0, scale: 2 })
-  @IsNumber()
+  @Column({ type: "decimal", default: 0, scale: 2 })
   balance: number;
 
   @ApiProperty({ description: "Description" })

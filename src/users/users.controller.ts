@@ -106,6 +106,16 @@ export class UsersController {
     return this.usersService.paginate(options);
   }
 
+  @Patch("transfer")
+  async transferBalance(
+    @Body("fromUserId") fromUserId: number,
+    @Body("toUserId") toUserId: number,
+    @Body("amount") amount: string, // amount как строка
+  ) {
+    await this.usersService.transferBalance(fromUserId, toUserId, amount);
+    return { message: "Transfer successful" };
+  }
+
   @UseInterceptors(CacheInterceptor)
   @CacheKey("updateCache")
   @CacheTTL(30) // override TTL to 30 seconds
@@ -126,17 +136,6 @@ export class UsersController {
         message: error.message,
       };
     }
-  }
-
-  @Patch("transfer")
-  async transferBalance(
-    @Body("fromUserId") fromUserId: number,
-    @Body("toUserId") toUserId: number,
-    @Body("amount") amount: number,
-  ) {
-    await this.usersService.transferBalance(fromUserId, toUserId, amount);
-    this.logger.log("transferBalance");
-    return { message: "Transfer successful" };
   }
 
   @Delete(":id")
