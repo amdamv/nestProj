@@ -56,6 +56,10 @@ export class UsersService {
     return await this.userRepository.find();
   }
 
+  async updateUserBalance(userId: number, newBalance: number): Promise<void> {
+    await this.userRepository.update(userId, { balance: newBalance });
+  }
+
   async findOneById(id: number): Promise<UserEntity> {
     const userData = await this.userRepository.findOneBy({ id });
 
@@ -116,6 +120,7 @@ export class UsersService {
     }
 
     this.logger.log("step 4 transaction");
+
     // Обновление баланса с точностью до двух знаков после запятой
     const newFromUserBalance = parseFloat(
       (fromUserBalance - numericAmount).toFixed(2),
@@ -133,34 +138,6 @@ export class UsersService {
     await this.userRepository.save(fromUser);
     await this.userRepository.save(toUser);
   }
-  // async transferBalance(fromUserId: number, toUserId: number, amount: string): Promise<void> {
-  //   const numericAmount = parseFloat(amount);
-  //   this.logger.log("step 1 transfer")
-  //   if (numericAmount <= 0 || isNaN(numericAmount)) {
-  //     throw new BadRequestException('Amount must be a valid number greater than zero');
-  //   }
-  //
-  //   // Поиск пользователей
-  //   const fromUser = await this.userRepository.findOne({ where: { id: fromUserId } });
-  //   const toUser = await this.userRepository.findOne({ where: { id: toUserId } });
-  //   this.logger.log("step 2 transfer")
-  //
-  //   if (!fromUser || !toUser) {
-  //     throw new NotFoundException('One or both users not found');
-  //   }
-  //
-  //   if (fromUser.balance < numericAmount) {
-  //     throw new BadRequestException('Insufficient balance');
-  //   }
-  //   this.logger.log("step 3 transfer")
-  //   fromUser.balance = parseFloat((fromUser.balance - numericAmount).toFixed(2));
-  //   toUser.balance = parseFloat((toUser.balance + numericAmount).toFixed(2));
-  //
-  //   this.logger.log("step 4 transfer")
-  //
-  //   await this.userRepository.save(fromUser);
-  //   await this.userRepository.save(toUser);
-  // }
 
   async delete(id: number): Promise<void> {
     const existingUser = await this.findOneById(id);

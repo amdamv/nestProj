@@ -43,6 +43,7 @@ import { APP_INTERCEPTOR } from "@nestjs/core";
   providers: [
     UsersService,
     MyPageService,
+
     {
       provide: APP_INTERCEPTOR,
       useClass: CacheInterceptor,
