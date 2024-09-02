@@ -18,7 +18,6 @@ import { APP_INTERCEPTOR } from "@nestjs/core";
     ConfigModule.forRoot({
       isGlobal: true,
     }),
-
     TypeOrmModule.forRootAsync({
       useFactory() {
         return {
