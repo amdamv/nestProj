@@ -97,9 +97,9 @@ export class UsersController {
     }
   }
 
-  @UseInterceptors(CacheInterceptor)
-  @CacheKey("AllUsersCache")
-  @CacheTTL(30) // override TTL to 30 seconds
+  // @UseInterceptors(CacheInterceptor)
+  // @CacheKey("AllUsersCache")
+  // @CacheTTL(30) // override TTL to 30 seconds
   @Get()
   async getAllUsers(@Query() query: PaginationQueryDto) {
     const options = { page: query.page, limit: query.limit };

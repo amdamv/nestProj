@@ -8,7 +8,6 @@ import { ConfigService } from "@nestjs/config";
 import { CacheInterceptor, CacheModule } from "@nestjs/cache-manager";
 import { redisStore } from "cache-manager-redis-store";
 import { RedisClientOptions } from "redis";
-import { MyPageService } from "./userInfo/mypage.service";
 import { APP_INTERCEPTOR } from "@nestjs/core";
 
 @Module({
@@ -42,7 +41,6 @@ import { APP_INTERCEPTOR } from "@nestjs/core";
   controllers: [UsersController],
   providers: [
     UsersService,
-    MyPageService,
     {
       provide: APP_INTERCEPTOR,
       useClass: CacheInterceptor,

@@ -1,5 +1,3 @@
-import { MyPageService } from "./users/userInfo/mypage.service";
-import { MyPageController } from "./users/userInfo/mypage.controller";
 import { Module } from "@nestjs/common";
 import { CacheInterceptor } from "@nestjs/cache-manager";
 import { UsersModule } from "./users/users.module";
@@ -12,6 +10,9 @@ import { S3Controller } from "./providers/files/s3/s3.controller";
 import { addTransactionalDataSource } from "typeorm-transactional";
 import { DataSource } from "typeorm";
 import { APP_INTERCEPTOR } from "@nestjs/core";
+import { ResetBalanceModule } from "./users/reset-balance/reset-balance.module";
+import { BullModule } from "@nestjs/bull";
+import * as process from "node:process";
 
 @Module({
   imports: [
@@ -39,14 +40,23 @@ import { APP_INTERCEPTOR } from "@nestjs/core";
         return addTransactionalDataSource(new DataSource(options));
       },
     }),
+    BullModule.forRootAsync({
+      useFactory: () => ({
+        redis: {
+          host: "localhost",
+          port: 6379,
+          password: process.env.REDIS_PASSWORD,
+        },
+      }),
+    }),
     AuthModule,
     UsersModule,
     MypageModule,
     S3Module,
+    ResetBalanceModule,
   ],
-  controllers: [MyPageController, S3Controller],
+  controllers: [S3Controller],
   providers: [
-    MyPageService,
     {
       provide: APP_INTERCEPTOR,
       useClass: CacheInterceptor,
