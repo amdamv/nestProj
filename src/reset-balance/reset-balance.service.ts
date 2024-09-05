@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { InjectQueue } from "@nestjs/bull";
 import { Queue } from "bull";
-import { RESET_BALANCE_QUEUE } from "../../common/constants/name-queue.constant";
+import { RESET_BALANCE_QUEUE } from "../common/constants/name-queue.constant";
 
 @Injectable()
 export class ResetBalanceService {

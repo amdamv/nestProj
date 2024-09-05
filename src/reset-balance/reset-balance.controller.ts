@@ -1,5 +1,5 @@
 import { Controller, Logger, Post, UseGuards } from "@nestjs/common";
-import { JwtAuthGuard } from "../../auth/guards/jwt-auth.guard";
+import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { ResetBalanceService } from "./reset-balance.service";
 
 @UseGuards(JwtAuthGuard)

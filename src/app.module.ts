@@ -10,7 +10,7 @@ import { S3Controller } from "./providers/files/s3/s3.controller";
 import { addTransactionalDataSource } from "typeorm-transactional";
 import { DataSource } from "typeorm";
 import { APP_INTERCEPTOR } from "@nestjs/core";
-import { ResetBalanceModule } from "./users/reset-balance/reset-balance.module";
+import { ResetBalanceModule } from "./reset-balance/reset-balance.module";
 import { BullModule } from "@nestjs/bull";
 import * as process from "node:process";
 

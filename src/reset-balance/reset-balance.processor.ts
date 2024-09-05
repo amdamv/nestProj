@@ -1,9 +1,9 @@
 import { Process, Processor } from "@nestjs/bull";
 import { Job } from "bull";
 import { Logger } from "@nestjs/common";
-import { RESET_BALANCE_QUEUE } from "../../common/constants/name-queue.constant";
+import { RESET_BALANCE_QUEUE } from "../common/constants/name-queue.constant";
 import { InjectRepository } from "@nestjs/typeorm";
-import { UserEntity } from "../entity/user.entity";
+import { UserEntity } from "../users/entity/user.entity";
 import { Repository } from "typeorm";
 
 @Processor(RESET_BALANCE_QUEUE)
