@@ -8,6 +8,7 @@ export class ResetBalanceController {
   private logger = new Logger("ResetBalanceController");
   constructor(private readonly resetBalanceService: ResetBalanceService) {}
 
+  @UseGuards(JwtAuthGuard)
   @Post("reset")
   async triggerBalanceReset() {
     this.logger.debug("Triggering balance reset job");

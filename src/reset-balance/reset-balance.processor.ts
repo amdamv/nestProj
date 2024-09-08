@@ -1,7 +1,10 @@
 import { Process, Processor } from "@nestjs/bull";
 import { Job } from "bull";
 import { Logger } from "@nestjs/common";
-import { RESET_BALANCE_QUEUE } from "../common/constants/name-queue.constant";
+import {
+  ADD_RESET_BALANCES,
+  RESET_BALANCE_QUEUE,
+} from "../common/constants/name-queue.constant";
 import { InjectRepository } from "@nestjs/typeorm";
 import { UserEntity } from "../users/entity/user.entity";
 import { Repository } from "typeorm";
@@ -14,7 +17,7 @@ export class ResetBalanceProcessor {
     private readonly userRepository: Repository<UserEntity>,
   ) {}
 
-  @Process("add-reset-balances")
+  @Process(ADD_RESET_BALANCES)
   async resetBalance(job: Job) {
     this.logger.log(`Processing reset balance job with id: ${job.id}`);
     await this.userRepository
