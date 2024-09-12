@@ -9,9 +9,10 @@ import { CacheInterceptor, CacheModule } from "@nestjs/cache-manager";
 import { redisStore } from "cache-manager-redis-store";
 import { RedisClientOptions } from "redis";
 import { APP_INTERCEPTOR } from "@nestjs/core";
-
+import { ResetBalanceModule } from "../reset-balance/reset-balance.module";
 @Module({
   imports: [
+    ResetBalanceModule,
     TypeOrmModule.forFeature([UserEntity]),
     JwtModule.registerAsync({
       useFactory: async (configService: ConfigService) => ({

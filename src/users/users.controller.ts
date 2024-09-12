@@ -21,12 +21,16 @@ import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { PaginationQueryDto } from "../users/dto/paginationQuery.dto";
 import { CacheTTL } from "@nestjs/common/cache";
 import { CacheInterceptor, CacheKey } from "@nestjs/cache-manager";
+import { ResetBalanceService } from "../reset-balance/reset-balance.service";
 
 @UseGuards(JwtAuthGuard)
 @Controller("users")
 export class UsersController {
   private logger = new Logger("UsersController");
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly resetBalanceService: ResetBalanceService,
+  ) {}
 
   @Post("resequence")
   async resequenceIds(): Promise<{ success: boolean; message: string }> {
@@ -41,6 +45,7 @@ export class UsersController {
   async createUser(@Body() createUserDto: CreateUserDto) {
     try {
       await this.usersService.createUser(createUserDto);
+      await this.resetBalanceService.resetAllBalances();
       return {
         success: true,
         message: "User created successfully",

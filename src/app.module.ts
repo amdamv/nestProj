@@ -10,9 +10,10 @@ import { S3Controller } from "./providers/files/s3/s3.controller";
 import { addTransactionalDataSource } from "typeorm-transactional";
 import { DataSource } from "typeorm";
 import { APP_INTERCEPTOR } from "@nestjs/core";
-import { ResetBalanceModule } from "./reset-balance/reset-balance.module";
 import { BullModule } from "@nestjs/bull";
 import * as process from "node:process";
+import { ResetBalanceModule } from "./reset-balance/reset-balance.module";
+import { ResetAfterRegisterModule } from "./reset-after-register/reset-after-register.module";
 
 @Module({
   imports: [
@@ -49,11 +50,12 @@ import * as process from "node:process";
         },
       }),
     }),
+    ResetAfterRegisterModule,
+    ResetBalanceModule,
     AuthModule,
     UsersModule,
     MypageModule,
     S3Module,
-    ResetBalanceModule,
   ],
   controllers: [S3Controller],
   providers: [
