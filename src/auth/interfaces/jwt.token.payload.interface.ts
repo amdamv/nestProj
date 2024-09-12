@@ -1,7 +1,8 @@
 import { UserEntity } from "../../users/entity/user.entity";
 
 export interface AccessTokenPayload {
-  sub: UserEntity | string | number;
+  /* eslint-disable @typescript-eslint/no-explicit-any */
+  sub: any;
   id: string;
   fullName: string;
   description: UserEntity | string | number;
