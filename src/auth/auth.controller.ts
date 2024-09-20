@@ -14,7 +14,7 @@ import { LocalAuthGuard } from "./guards/local-auth.guard";
 import { UserEntity } from "src/users/entity/user.entity";
 import { SignInDto } from "src/users/dto/signIn.dto";
 import { JwtAuthGuard } from "./guards/jwt-auth.guard";
-import {ApiBadGatewayResponse, ApiBadRequestResponse, ApiCreatedResponse, ApiResponse} from "@nestjs/swagger";
+import { ApiBadRequestResponse, ApiCreatedResponse } from "@nestjs/swagger";
 
 @Controller("auth")
 export class AuthController {
@@ -25,7 +25,7 @@ export class AuthController {
     description: "User has been registered successfully",
     type: UserEntity,
   })
-  @ApiBadRequestResponse({description: "User can not register, try again!"})
+  @ApiBadRequestResponse({ description: "User can not register, try again!" })
   async register(@Body() createUserDto: CreateUserDto) {
     return this.authService.register(createUserDto);
   }
@@ -36,7 +36,7 @@ export class AuthController {
   async signIn(@Body() signInDto: SignInDto) {
     const token = await this.authService.signIn(
       signInDto.email,
-      signInDto.password
+      signInDto.password,
     );
     if (!token) {
       return { message: "Invalid credentials" };

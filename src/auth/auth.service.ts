@@ -9,10 +9,13 @@ import { CreateUserDto } from "src/users/dto/create-user.dto";
 export class AuthService {
   constructor(
     private readonly usersService: UsersService,
-    private readonly jwtService: JwtService
+    private readonly jwtService: JwtService,
   ) {}
 
-  async validateUser(email: string, pass: string): Promise<any> {
+  async validateUser(
+    email: string,
+    pass: string,
+  ): Promise<UserEntity | null | string> {
     console.log(`Validating user: ${email}`);
 
     const user = await this.usersService.findOneByEmail(email);
@@ -24,7 +27,7 @@ export class AuthService {
     if (user && isMatch) {
       const { password, ...result } = user;
       console.log(`User validated: ${email}`);
-      return result;
+      return password + " " + result;
     }
 
     console.log(`User validation failed: ${email}`);
@@ -34,7 +37,7 @@ export class AuthService {
 
   async signIn(
     email: string,
-    password: string
+    password: string,
   ): Promise<{ access_token: string; user: UserEntity }> {
     const user = await this.usersService.findOneByEmail(email);
 
@@ -58,6 +61,6 @@ export class AuthService {
       ...createUserDto,
     });
     const { password, ...result } = newUser;
-    return result;
+    return password + " " + result;
   }
 }

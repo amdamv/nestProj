@@ -1,5 +1,10 @@
-import { JwtService } from "@nestjs/jwt";
-import { HttpException, Injectable } from "@nestjs/common";
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  NotFoundException,
+  Logger,
+} from "@nestjs/common";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
 import { UserEntity } from "./entity/user.entity";
@@ -10,36 +15,22 @@ import {
   paginate,
   Pagination,
 } from "nestjs-typeorm-paginate";
+import { Transactional } from "typeorm-transactional";
+import { CACHE_MANAGER, Cache } from "@nestjs/cache-manager";
 
 @Injectable()
 export class UsersService {
+  private logger = new Logger("UsersService");
   constructor(
+    @Inject(CACHE_MANAGER) private cacheService: Cache,
     @InjectRepository(UserEntity)
     private userRepository: Repository<UserEntity>,
-    private readonly jwtService: JwtService
   ) {}
   async findOneByEmail(email: string): Promise<UserEntity> {
     return await this.userRepository.findOneBy({ email });
   }
 
-  // async create(createUserDto: CreateUserDto): Promise<UserEntity> {
-  //   const existUser = await this.userRepository.findOne({
-  //     where: { email: createUserDto.email },
-  //   });
-  //   if (existUser) {
-  //     throw new BadRequestException("Email already exists!");
-  //   }
-
-  //   const user = this.userRepository.save({
-  //     email: createUserDto.email,
-  //     password: await bcrypt.hash(createUserDto.password),
-  //   });
-
-  //   const token = this.jwtService.sign({ email: createUserDto.email });
-
-  //   return { token, user };
-  // }
-
+  @Transactional()
   async createUser(createUserDto: CreateUserDto): Promise<UserEntity> {
     try {
       const user: UserEntity = this.userRepository.create({
@@ -47,19 +38,17 @@ export class UsersService {
         email: createUserDto.email,
         password: createUserDto.password,
         description: createUserDto.description,
+        balance: createUserDto.balance,
       });
+      this.logger.log("createUserDto.password");
+      this.logger.log(createUserDto.password);
 
-      console.log("createUserDto.password");
-      console.log(createUserDto.password);
-
-      // $2b$10$PVPS2ngnxxcs/hco3X81NuJPqIAnqlGcJP1cKweuc7wZBbRBQHnei
-
-      console.log("user.password");
-      console.log(user.password);
+      this.logger.log("user.password");
+      this.logger.log(user.password);
 
       return await this.userRepository.save(user);
     } catch (error) {
-      throw new HttpException(error.message, 500);
+      throw new BadRequestException(error.message);
     }
   }
 
@@ -67,39 +56,95 @@ export class UsersService {
     return await this.userRepository.find();
   }
 
+  async updateUserBalance(userId: number, newBalance: number): Promise<void> {
+    await this.userRepository.update(userId, { balance: newBalance });
+  }
+
   async findOneById(id: number): Promise<UserEntity> {
     const userData = await this.userRepository.findOneBy({ id });
+
+    await this.cacheService.set(id.toString(), userData);
+    const cachedData = await this.cacheService.get(id.toString());
+    this.logger.log("data set to cache", cachedData);
+
     if (!userData) {
-      throw new HttpException("User Not Found", 404);
+      throw new NotFoundException("User Not Found");
     }
     return userData;
   }
 
-  async findOneByName(fullName: string): Promise<UserEntity | undefined> {
-    const userData = await this.userRepository.findOneBy({ fullName });
-    if (!userData) {
-      throw new HttpException("User Not Found", 404);
-    }
-    return userData;
-  }
-
+  @Transactional()
   async update(id: number, updateUserDto: UpdateUserDto): Promise<UserEntity> {
     const existingUser = await this.findOneById(id);
     if (!existingUser) {
-      throw new HttpException("User Not Found", 404);
+      throw new NotFoundException("User not found for updating");
     }
     const updatedUser = this.userRepository.merge(existingUser, updateUserDto);
     return await this.userRepository.save(updatedUser);
   }
-  
+
+  @Transactional()
+  async transferBalance(
+    fromUserId: number,
+    toUserId: number,
+    amount: string,
+  ): Promise<void> {
+    const numericAmount = parseFloat(amount);
+    this.logger.log("step 1 transaction");
+    if (numericAmount <= 0 || isNaN(numericAmount)) {
+      throw new BadRequestException(
+        "Amount must be a valid number greater than zero",
+      );
+    }
+
+    // Поиск пользователей
+    const fromUser = await this.userRepository.findOne({
+      where: { id: fromUserId },
+    });
+    const toUser = await this.userRepository.findOne({
+      where: { id: toUserId },
+    });
+    this.logger.log("step 2 transaction");
+
+    if (!fromUser || !toUser) {
+      throw new NotFoundException("One or both users not found");
+    }
+
+    // Приведение баланса к числовому типу (явное приведение типа, если из базы возвращаются строки)
+    const fromUserBalance = parseFloat(fromUser.balance as unknown as string);
+    const toUserBalance = parseFloat(toUser.balance as unknown as string);
+    this.logger.log("step 3 transaction");
+
+    if (fromUserBalance < numericAmount) {
+      throw new BadRequestException("Insufficient balance");
+    }
+
+    this.logger.log("step 4 transaction");
+
+    // Обновление баланса с точностью до двух знаков после запятой
+    const newFromUserBalance = parseFloat(
+      (fromUserBalance - numericAmount).toFixed(2),
+    );
+    const newToUserBalance = parseFloat(
+      (toUserBalance + numericAmount).toFixed(2),
+    );
+    this.logger.log("step 5 transaction");
+
+    // Присвоение нового значения баланса
+    fromUser.balance = newFromUserBalance;
+    toUser.balance = newToUserBalance;
+    this.logger.log("step 6 transaction");
+
+    await this.userRepository.save(fromUser);
+    await this.userRepository.save(toUser);
+  }
 
   async delete(id: number): Promise<void> {
     const existingUser = await this.findOneById(id);
     if (!existingUser) {
-      throw new HttpException("User Not Found", 404);
-
+      throw new NotFoundException("User not found for deleting");
     }
-    
+
     await this.userRepository.remove(existingUser);
   }
 
@@ -118,13 +163,6 @@ export class UsersService {
       });
     }
   }
-
-  // async resequenceIds(): Promise<any> {
-  //   const users = await this.userRepository.find();
-  //   for (let i = 0; i < users.length; i++) {
-  //     await this.userRepository.update(users[i].id, { id: i + 1 });
-  //   }
-  // }
 
   async paginate(options: IPaginationOptions): Promise<Pagination<UserEntity>> {
     const queryBuilder = this.userRepository.createQueryBuilder("users");

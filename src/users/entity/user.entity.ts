@@ -1,4 +1,4 @@
-import { IsNumber, length, MinLength } from "class-validator";
+import { IsNumber } from "class-validator";
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -8,7 +8,7 @@ import {
   UpdateDateColumn,
 } from "typeorm";
 import * as bcrypt from "bcrypt";
-import {ApiProperty} from "@nestjs/swagger";
+import { ApiProperty } from "@nestjs/swagger";
 
 @Entity()
 export class UserEntity {
@@ -16,17 +16,20 @@ export class UserEntity {
   @IsNumber()
   id: number;
 
-  @ApiProperty({ description: "Username"})
+  @ApiProperty({ description: "Username" })
   @Column()
   fullName: string;
 
-  @ApiProperty({ description: "Email address",
-   example: "maff.akh@gmail.com"  })
+  @ApiProperty({ description: "Email address", example: "maff.akh@gmail.com" })
   @Column({ nullable: false, unique: true })
   email: string;
 
-  @ApiProperty({ description: "Password",
-   minLength: 4, maxLength: 20, example: "password123"  })
+  @ApiProperty({
+    description: "Password",
+    minLength: 4,
+    maxLength: 20,
+    example: "password123",
+  })
   @Column({ nullable: false })
   password: string;
 
@@ -34,6 +37,10 @@ export class UserEntity {
   async hashPassword() {
     this.password = await bcrypt.hash(this.password, 10);
   }
+
+  @ApiProperty({ description: "Balance $" })
+  @Column({ type: "decimal", default: 0, scale: 2 })
+  balance: number;
 
   @ApiProperty({ description: "Description" })
   @Column({ nullable: true })

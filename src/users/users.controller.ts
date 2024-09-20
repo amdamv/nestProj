@@ -10,18 +10,27 @@ import {
   UseGuards,
   ParseIntPipe,
   Query,
+  UseInterceptors,
+  Logger,
 } from "@nestjs/common";
 import { UsersService } from "./users.service";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
 import { User } from "./userInfo/user.decorator";
-import { JwtAuthGuard } from "src/auth/guards/jwt-auth.guard";
-import { PaginationQueryDto } from "src/users/dto/paginationQuery.dto";
+import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
+import { PaginationQueryDto } from "../users/dto/paginationQuery.dto";
+import { CacheTTL } from "@nestjs/common/cache";
+import { CacheInterceptor, CacheKey } from "@nestjs/cache-manager";
+import { ResetBalanceService } from "../reset-balance/reset-balance.service";
 
 @UseGuards(JwtAuthGuard)
 @Controller("users")
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  private logger = new Logger("UsersController");
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly resetBalanceService: ResetBalanceService,
+  ) {}
 
   @Post("resequence")
   async resequenceIds(): Promise<{ success: boolean; message: string }> {
@@ -36,6 +45,7 @@ export class UsersController {
   async createUser(@Body() createUserDto: CreateUserDto) {
     try {
       await this.usersService.createUser(createUserDto);
+      await this.resetBalanceService.resetAllBalances();
       return {
         success: true,
         message: "User created successfully",
@@ -50,10 +60,7 @@ export class UsersController {
 
   @Get("my")
   async findMyInfo(@User() user): Promise<UserEntity> {
-    console.log(user);
-    console.log(user);
-    console.log(user);
-    console.log(user);
+    this.logger.log(user);
     return await this.usersService.findMyInfo(Number(user.id));
   }
 
@@ -75,9 +82,13 @@ export class UsersController {
   }
 
   @Get(":id")
-  async findOneById(@Param("id", ParseIntPipe) id: number) {
+  @UseInterceptors(CacheInterceptor)
+  @CacheKey("UserCache")
+  @CacheTTL(30) // override TTL to 30 seconds
+  await(@Param("id", ParseIntPipe) id: number) {
+    this.logger.log("UserCache");
     try {
-      const data = await this.usersService.findOneById(Number(id));
+      const data = this.usersService.findOneById(Number(id));
       return {
         success: true,
         data,
@@ -97,10 +108,23 @@ export class UsersController {
     return this.usersService.paginate(options);
   }
 
+  @Patch("transfer")
+  async transferBalance(
+    @Body("fromUserId") fromUserId: number,
+    @Body("toUserId") toUserId: number,
+    @Body("amount") amount: string, // amount как строка
+  ) {
+    await this.usersService.transferBalance(fromUserId, toUserId, amount);
+    return { message: "Transfer successful" };
+  }
+
+  @UseInterceptors(CacheInterceptor)
+  @CacheKey("updateCache")
+  @CacheTTL(30) // override TTL to 30 seconds
   @Patch(":id")
   async update(
     @Param("id", ParseIntPipe) id: number,
-    @Body() updateUserDto: UpdateUserDto
+    @Body() updateUserDto: UpdateUserDto,
   ) {
     try {
       await this.usersService.update(Number(id), updateUserDto);
