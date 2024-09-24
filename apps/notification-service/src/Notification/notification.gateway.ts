@@ -5,42 +5,41 @@ import {
   WebSocketServer,
   SubscribeMessage,
 } from "@nestjs/websockets";
-import { Logger } from "@nestjs/common";
+import { BadRequestException, Logger } from "@nestjs/common";
 import { Server, Socket } from "socket.io";
-import { AuthService } from "../../../user/src/auth/auth.service";
+import { AuthNotificationService } from "../auth/auth-notification.service";
 
 @WebSocketGateway()
 export class NotificationGateway
   implements OnGatewayConnection, OnGatewayDisconnect
 {
   private readonly logger = new Logger();
+  constructor(
+    private readonly authNotificationService: AuthNotificationService,
+  ) {}
   @WebSocketServer() io: Server;
-  constructor(private readonly authService: AuthService) {}
 
-  afterInit() {
-    this.logger.log("Initialized");
-  }
-
-  async handleConnection(client: Socket) {
+  handleConnection(client: Socket) {
     const { sockets } = this.io.sockets;
     this.logger.log(`Client id: ${client.id} connected`);
     this.logger.debug(`Number of connected clients: ${sockets.size}`);
 
     try {
-      const token = client.handshake.auth.token; // Извлекаем JWT токен
-      const user = await this.authService.validateToken(token); // Проверяем токен
-
-      if (!user) {
-        this.logger.error(`Invalid token for client id: ${client.id}`);
-        client.disconnect();
-        return;
+      const authHeader = client.handshake.headers.authorization;
+      if (!authHeader) {
+        this.logger.error("No authorization header");
+        throw new BadRequestException("No authorization header");
       }
 
-      const userId = user.id;
-      client.join(`room-${userId}`);
-      this.logger.log(`Client id: ${client.id} joined room: room-${userId}`);
-    } catch {
-      this.logger.error(`Error validating token for client id: ${client.id}`);
+      client.data.userId = this.authNotificationService.verifyJwt(authHeader);
+
+      client.join(client.data.userId);
+      this.logger.log(`room-A is opened`);
+    } catch (err) {
+      this.logger.error(
+        `Error validating token for client id: ${client.id} - ${err.message}`,
+      );
+      client.emit("error", "Unauthorized");
       client.disconnect();
     }
   }

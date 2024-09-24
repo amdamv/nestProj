@@ -31,6 +31,22 @@ services:
         - "6379:6379"
       restart: unless-stopped
 
+  nats:
+    image: nats:alpine3.17
+    container_name: nats-main
+    env_file:
+      - .env
+    environment:
+      NATS_SERVERS: ${NATS_SERVERS}
+      NATS_USERNAME: ${NATS_USERNAME}
+      NATS_PASSWORD: ${NATS_PASSWORD}
+    command: "--js -m 8009"
+    volumes:
+      - ./data:/data
+    ports:
+      - "4222:${NATS_PORT}"
+      - "8009:8009"
+
 volumes:
   minio_storage:
   postgres_data:

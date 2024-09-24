@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import { UsersService } from "../users/users.service";
 import { JwtService } from "@nestjs/jwt";
 import * as bcrypt from "bcrypt";
@@ -33,23 +33,6 @@ export class AuthService {
     console.log(`User validation failed: ${email}`);
 
     return null;
-  }
-
-  async validateToken(token: string): Promise<UserEntity | null> {
-    try {
-      const payload = this.jwtService.verify(token); // Проверка валидности токена
-
-      // Например, получаем пользователя по ID из payload
-      const user = await this.usersService.findOneById(payload.sub);
-
-      if (!user) {
-        throw new UnauthorizedException("User not found");
-      }
-
-      return user;
-    } catch {
-      return null; // Если токен не валиден или произошла ошибка
-    }
   }
 
   async signIn(
