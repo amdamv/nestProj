@@ -10,10 +10,20 @@ import { redisStore } from "cache-manager-redis-store";
 import { RedisClientOptions } from "redis";
 import { APP_INTERCEPTOR } from "@nestjs/core";
 import { ResetBalanceModule } from "../reset-balance/reset-balance.module";
+import { ClientsModule, Transport } from "@nestjs/microservices";
 
 @Module({
   imports: [
     ResetBalanceModule,
+    ClientsModule.register([
+      {
+        name: "root",
+        transport: Transport.NATS,
+        options: {
+          servers: ["nats://localhost:4222"],
+        },
+      },
+    ]),
     TypeOrmModule.forFeature([UserEntity]),
 
     JwtModule.registerAsync({
@@ -51,6 +61,17 @@ import { ResetBalanceModule } from "../reset-balance/reset-balance.module";
       useClass: CacheInterceptor,
     },
   ],
-  exports: [UsersService],
+  exports: [
+    UsersService,
+    ClientsModule.register([
+      {
+        name: "root",
+        transport: Transport.NATS,
+        options: {
+          servers: ["nats://localhost:4222"],
+        },
+      },
+    ]),
+  ],
 })
 export class UsersModule {}

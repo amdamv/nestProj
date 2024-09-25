@@ -4,7 +4,7 @@ import { Queue } from "bull";
 import {
   ADD_RESET_BALANCES,
   RESET_BALANCE_QUEUE,
-} from "../common/constants/name-queue.constant";
+} from "../../../../common/constants/name-queue.constant";
 import { Logger } from "@nestjs/common";
 
 @Injectable()

@@ -57,7 +57,9 @@ export class NotificationGateway
     };
   }
 
-  async sendNotification(userId: string) {
-    this.io.to(userId).emit("notification", { data: "hello!" });
+  async sendNotification(userId: string, notificationMessage: string) {
+    this.io
+      .to(userId) // Отправка уведомления пользователю по его идентификатору (например, room ID)
+      .emit("notification", { message: notificationMessage }); // Эмитируем событие с текстом уведомления
   }
 }

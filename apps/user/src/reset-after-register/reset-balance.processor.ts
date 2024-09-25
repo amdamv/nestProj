@@ -4,7 +4,7 @@ import { Logger } from "@nestjs/common";
 import {
   ADD_RESET_BALANCES,
   RESET_BALANCE_QUEUE,
-} from "../common/constants/name-queue.constant";
+} from "../../../../common/constants/name-queue.constant";
 import { InjectRepository } from "@nestjs/typeorm";
 import { UserEntity } from "../../../../Libraries/entity/user.entity";
 import { Repository } from "typeorm";

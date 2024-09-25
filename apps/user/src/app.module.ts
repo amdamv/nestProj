@@ -15,19 +15,9 @@ import * as process from "node:process";
 import { ResetBalanceModule } from "./reset-balance/reset-balance.module";
 import { ResetAfterRegisterModule } from "./reset-after-register/reset-after-register.module";
 import { UserEntity } from "../../../Libraries/entity/user.entity";
-import { ClientsModule, Transport } from "@nestjs/microservices";
 
 @Module({
   imports: [
-    ClientsModule.register([
-      {
-        name: "NOTIFICATION_SERVICE",
-        transport: Transport.NATS,
-        options: {
-          servers: ["nats://localhost:4222"],
-        },
-      },
-    ]),
     ConfigModule.forRoot({
       isGlobal: true,
     }),

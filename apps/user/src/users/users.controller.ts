@@ -12,6 +12,8 @@ import {
   Query,
   UseInterceptors,
   Logger,
+  Inject,
+  BadRequestException,
 } from "@nestjs/common";
 import { UsersService } from "./users.service";
 import { CreateUserDto } from "./dto/create-user.dto";
@@ -22,6 +24,7 @@ import { PaginationQueryDto } from "./dto/paginationQuery.dto";
 import { CacheTTL } from "@nestjs/common/cache";
 import { CacheInterceptor, CacheKey } from "@nestjs/cache-manager";
 import { ResetBalanceService } from "../reset-balance/reset-balance.service";
+import { ClientProxy } from "@nestjs/microservices";
 
 @UseGuards(JwtAuthGuard)
 @Controller("users")
@@ -30,6 +33,7 @@ export class UsersController {
   constructor(
     private readonly usersService: UsersService,
     private readonly resetBalanceService: ResetBalanceService,
+    @Inject("root") private natsClient: ClientProxy,
   ) {}
 
   @Post("resequence")
@@ -46,6 +50,7 @@ export class UsersController {
     try {
       await this.resetBalanceService.resetAllBalances();
       await this.usersService.createUser(createUserDto);
+      this.natsClient.emit({ cmd: "user_create" }, createUserDto);
       return {
         success: true,
         message: "User created successfully",
@@ -112,9 +117,31 @@ export class UsersController {
   async transferBalance(
     @Body("fromUserId") fromUserId: number,
     @Body("toUserId") toUserId: number,
-    @Body("amount") amount: string, // amount как строка
+    @Body("amount") amount: string,
   ) {
-    await this.usersService.transferBalance(fromUserId, toUserId, amount);
+    const parsedAmount = parseFloat(amount);
+
+    if (isNaN(parsedAmount) || parsedAmount <= 0) {
+      throw new BadRequestException("Invalid transfer amount");
+    }
+
+    await this.usersService.transferBalance(
+      fromUserId,
+      toUserId,
+      parsedAmount.toString(),
+    );
+
+    // Emitting a structured NATS event
+    await this.natsClient.emit(
+      { cmd: "transactionComplete" },
+      {
+        fromUserId,
+        toUserId,
+        amount: parsedAmount,
+        message: `Transaction completed successfully: ${parsedAmount} transferred from user ${fromUserId} to user ${toUserId}`,
+      },
+    );
+
     return { message: "Transfer successful" };
   }
 
